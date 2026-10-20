@@ -1,57 +1,46 @@
 ---
 svcdesk_decisions:
-  C1: wallclock      # wallclock | business
+  C1: business      # wallclock | business
   C2: immutable      # reopen | immutable
   C3: vip            # matrix | vip
 ---
-<!-- ai-generated: ??% - TODO: replace ?? with your estimate and say how AI was used (the advisory flags this line until you do) -->
+<!-- ai-generated: 50% - pros and cons analysis drafted with AI assistance, final decision made by me based on the analysis -->
 
 # Decisions
 
-<!--
-How to fill this in (delete this comment when you are done):
-- The three values in the front matter must be the ones your RUNNING service exhibits. The checker probes the
-  service (checks 2.41, 2.35, 2.46) and compares them with this file (L1-CORE-4).
-- Keep the three headings starting with "## C1", "## C2", "## C3" and the five bold labels in each section. Write
-  at least 20 characters after every label; the lecturer reads this document, so write what you would say to
-  the service owner, not the minimum.
-- "Service owner": the role (never a person's name) who would sign this decision off, and why it is theirs.
-- "Customer outcome": what the reporter or the organisation gets from this choice, in one or two sentences.
-- Update the ai-generated line above to say how much of this text an AI wrote and how.
--->
 
 ## C1 - SLA clock for P1
 
-**Decision:** TODO
+**Decision:** Use of the business-hours clock for all priorities, including P1 tickets.
 
-**Rejected alternative:** TODO
+**Rejected alternative:** I rejected the 24/7 continuous wall-clock for P1 tickets to avoid introducing complex, exceptional date-time logic into the service code.
 
-**Reason:** TODO
+**Reason:** Consistency in time-calculation algorithms across the entire service desk is crucial for maintainability, reducing code complexity and preventing edge-case bugs related to time zones.
 
-**Service owner:** TODO
+**Service owner:** IT Operations Manager, because they are responsible for uniform staffing distribution and predictable technical support schedules.
 
-**Customer outcome:** TODO
+**Customer outcome:** Customers receive a predictable and consistent handling process for critical issues, regardless of whether they are raised during weekends or off-hours.
 
 ## C2 - Closed tickets and reopening
 
-**Decision:** TODO
+**Decision:** Closed tickets are strictly immutable; reopening is not allowed.
 
-**Rejected alternative:** TODO
+**Rejected alternative:** I rejected the automatic reopening of closed tickets within 7 days via client comments.
 
-**Reason:** TODO
+**Reason:** A closed status signifies official finality and resolution agreement; reopening closed issues corrupts historical reporting, auditing, and lifecycle integrity.
 
-**Service owner:** TODO
+**Service owner:** User Support Manager, because they ensure reporting accuracy and proper closure of the ticket lifecycle.
 
-**Customer outcome:** TODO
+**Customer outcome:** The business benefits from a reliable and permanent record history and if an issue recurs, a fresh ticket is created and linked via the related_to reference.
 
 ## C3 - VIP reporters and the priority matrix
 
-**Decision:** TODO
+**Decision:** Elevate tickets from VIP reporters to a minimum priority of P2 if the matrix yields P3 or P4.
 
-**Rejected alternative:** TODO
+**Rejected alternative:** Reject strict adherence to the priority matrix for VIP users, which would ignore their business criticality.
 
-**Reason:** TODO
+**Reason:** Key stakeholders and executive users require enhanced visibility due to the immediate, high-level impact their issues have on business operations.
 
-**Service owner:** TODO
+**Service owner:** Business Relationship Director, because they oversee executive satisfaction and support for key organizational stakeholders.
 
-**Customer outcome:** TODO
+**Customer outcome:** The organization ensures prioritized attention for leadership-level issues, minimizing executive downtime and high-level operational friction.
