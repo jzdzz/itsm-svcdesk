@@ -1,0 +1,5 @@
+# ai-generated: true
+fastapi>=0.100.0
+uvicorn>=0.20.0
+pydantic>=2.0
+pytz>=2023.3
