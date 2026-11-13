@@ -1,11 +1,39 @@
 # ai-generated: 100% - Gemini
 services:
+  kb-index:
+    image: ghcr.io/swasik/seeded-toxic:2026
+    environment:
+      SEEDED_TOXIC_LOGIN: "jzdzz"
+    ports:
+      - "8081:8080"
+    # Pamiętaj: brak sekcji healthcheck dla kb-index! Obraz nie ma powłoki shell[cite: 5, 7].
+
+  prometheus:
+    image: prom/prometheus:v3.15.0
+    profiles: ["observability"]
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus:/etc/prometheus:ro
+
+  grafana:
+    image: grafana/grafana:13.2.3
+    profiles: ["observability"]
+    ports:
+      - "3000:3000"
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
   svcdesk:
     build: .
     ports:
       - "8080:8080"
     environment:
       SVCDESK_TEST_CLOCK: "1"
+      KB_INDEX_URL: http://kb-index:8080
     volumes:
       - svcdesk-data:/data
     healthcheck:

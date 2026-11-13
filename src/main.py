@@ -5,9 +5,16 @@ from typing import Any, Dict, List, Literal, Optional, Set
 import uuid
 from fastapi import FastAPI, Header, Request, status
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, Field
 import pytz
+import os
+import time
+import httpx
+from fastapi import Query
+from fastapi.routing import APIRoute
+from prometheus_client import Histogram, generate_latest, CONTENT_TYPE_LATEST
+from prometheus_client.core import REGISTRY
 
 app = FastAPI(title="svcdesk", version="1.0.0")
 
@@ -26,6 +33,57 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 tickets_db = {}
 WARSAW_TZ = pytz.timezone("Europe/Warsaw")
+
+KB_INDEX_URL = os.getenv("KB_INDEX_URL", "http://kb-index:8080")
+http_client = httpx.AsyncClient(
+    timeout=2.5,
+    limits=httpx.Limits(max_connections=200, max_keepalive_connections=100)
+)
+
+CUSTOM_BUCKETS = [
+    0.05, 0.1, 0.18, 0.2, 0.22, 0.24, 0.26, 0.28, 0.3,
+    0.33, 0.36, 0.4, 0.44, 0.48, 0.53, 0.58, 0.65, 0.72,
+    0.8, 0.9, 1.0, 1.15, 1.3, 1.5, 1.7, 2.0, 2.5, 3.5, 5.0
+]
+http_request_duration = Histogram(
+    "http_server_request_duration_seconds",
+    "Duration of HTTP requests in seconds",
+    ["http_request_method", "http_route", "http_response_status_code"],
+    buckets=CUSTOM_BUCKETS
+)
+
+@app.middleware("http")
+async def prometheus_metrics_middleware(request: Request, call_next):
+    # Nie mierzymy samego endpointu /metrics
+    if request.url.path == "/metrics":
+        return await call_next(request)
+
+    start_time = time.time()
+    method = request.method
+    route_template = "unmatched"
+
+    try:
+        response = await call_next(request)
+        status_code = str(response.status_code)
+    except Exception as e:
+        status_code = "500"
+        raise e
+    finally:
+        # Odnajdywanie szablonu trasy (wymĂłg M-05 z instrukcji kursu: szablony, a nie surowe Ĺ›cieĹĽki z ID)
+        for route in app.routes:
+            if isinstance(route, APIRoute):
+                match, _ = route.matches(request.scope)
+                if match == match.FULL:
+                    route_template = route.path
+                    break
+        
+        # Mierzymy czas i dodajemy prĂłbkÄ™ do histogramu
+        http_request_duration.labels(method, route_template, status_code).observe(time.time() - start_time)
+
+    return response
+
+
+
 
 class Reporter(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
@@ -136,6 +194,43 @@ def calculate_sla(priority: str, created_at: datetime) -> SLAModel:
 def health_check():
     return {"status": "ok", "service": "svcdesk"}
 
+@app.get("/metrics")
+def get_metrics():
+    # Zwraca metryki Prometheusa w czystym formacie tekstowym, bez formatowania JSON
+    return Response(
+        content=generate_latest(REGISTRY),
+        media_type=CONTENT_TYPE_LATEST
+    )
+
+@app.get("/kb/search")
+async def kb_search(q: str = Query(None)):
+    if not q or len(q) < 1 or len(q) > 200:
+        return JSONResponse(
+            status_code=400,
+            content={"error": {"code": "validation", "message": "Query 'q' must be between 1 and 200 characters"}}
+        )
+
+    try:
+        response = await http_client.get(f"{KB_INDEX_URL}/search", params={"q": q})
+        if response.status_code == 200:
+            upstream_data = response.json()
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "query": q,
+                    "hits": upstream_data.get("hits", [])
+                }
+            )
+        else:
+            return JSONResponse(
+                status_code=502,
+                content={"error": {"code": "upstream_unavailable", "message": "Upstream service failed"}}
+            )
+    except (httpx.RequestError, httpx.TimeoutException):
+        return JSONResponse(
+            status_code=502,
+            content={"error": {"code": "upstream_unavailable", "message": "Upstream service timeout or connection error"}}
+        )
 @app.post("/tickets", status_code=status.HTTP_201_CREATED, response_model=Ticket)
 def create_ticket(payload: TicketCreate, x_test_clock: Optional[str] = Header(None)):
     now = parse_test_clock(x_test_clock)

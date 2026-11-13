@@ -1,0 +1,16 @@
+﻿# ai-generated: 100% - ServiceMonitor selecting svcdesk
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: svcdesk-monitor
+  namespace: default
+  labels:
+    app: svcdesk
+spec:
+  selector:
+    matchLabels:
+      app: svcdesk
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s

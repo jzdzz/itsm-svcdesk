@@ -1,0 +1,9 @@
+﻿# ai-generated: 100% - helm values for kube-prometheus-stack
+prometheus:
+  prometheusSpec:
+    retention: 2h
+    resources:
+      limits:
+        memory: 1Gi
+    ruleSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false

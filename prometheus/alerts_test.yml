@@ -1,0 +1,96 @@
+﻿# ai-generated: 100% - prometheus tests
+rule_files:
+  - alerts.yml
+
+evaluation_interval: 1m
+
+tests:
+  - name: "Just Below FastBurn Threshold (5.0% error)"
+    interval: 1m
+    input_series:
+      - series: 'http_server_request_duration_seconds_bucket{http_route="/kb/search", le="0.3"}'
+        values: '0+950x60'
+      - series: 'http_server_request_duration_seconds_count{http_route="/kb/search"}'
+        values: '0+1000x60'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: KbSearchLatencyHigh_FastBurn
+        exp_alerts: []
+      - eval_time: 60m
+        alertname: KbSearchLatencyHigh_FastBurn
+        exp_alerts: []
+
+  - name: "Just Below SlowBurn Threshold (2.5% error)"
+    interval: 1m
+    input_series:
+      - series: 'http_server_request_duration_seconds_bucket{http_route="/kb/search", le="0.3"}'
+        values: '0+975x360'
+      - series: 'http_server_request_duration_seconds_count{http_route="/kb/search"}'
+        values: '0+1000x360'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: KbSearchLatencyHigh_SlowBurn
+        exp_alerts: []
+      - eval_time: 30m
+        alertname: KbSearchLatencyHigh_SlowBurn
+        exp_alerts: []
+      - eval_time: 360m
+        alertname: KbSearchLatencyHigh_SlowBurn
+        exp_alerts: []
+
+  - name: "First Fires FastBurn (10.0% error)"
+    interval: 1m
+    input_series:
+      - series: 'http_server_request_duration_seconds_bucket{http_route="/kb/search", le="0.3"}'
+        values: '0+900x60'
+      - series: 'http_server_request_duration_seconds_count{http_route="/kb/search"}'
+        values: '0+1000x60'
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: KbSearchLatencyHigh_FastBurn
+        exp_alerts:
+          - exp_labels:
+              severity: P1
+              service: svcdesk
+              slo: latency
+              burn_rate: "14.4"
+              window: 1h
+
+  - name: "First Fires SlowBurn (4.0% error)"
+    interval: 1m
+    input_series:
+      - series: 'http_server_request_duration_seconds_bucket{http_route="/kb/search", le="0.3"}'
+        values: '0+960x360'
+      - series: 'http_server_request_duration_seconds_count{http_route="/kb/search"}'
+        values: '0+1000x360'
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: KbSearchLatencyHigh_SlowBurn
+        exp_alerts:
+          - exp_labels:
+              severity: P2
+              service: svcdesk
+              slo: latency
+              burn_rate: "6.0"
+              window: 6h
+
+  - name: "Reset FastBurn"
+    interval: 1m
+    input_series:
+      - series: 'http_server_request_duration_seconds_bucket{http_route="/kb/search", le="0.3"}'
+        values: '0+900x5 4500+1000x60'
+      - series: 'http_server_request_duration_seconds_count{http_route="/kb/search"}'
+        values: '0+1000x5 5000+1000x60'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: KbSearchLatencyHigh_FastBurn
+        exp_alerts:
+          - exp_labels:
+              severity: P1
+              service: svcdesk
+              slo: latency
+              burn_rate: "14.4"
+              window: 1h
+      - eval_time: 15m
+        alertname: KbSearchLatencyHigh_FastBurn
+        exp_alerts: []
