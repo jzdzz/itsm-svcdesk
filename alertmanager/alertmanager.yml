@@ -1,0 +1,31 @@
+# ai-generated: 100% - Gemini
+route:
+  receiver: 'chat'
+  group_by: ['alertname']
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 1h
+  routes:
+    - matchers:
+        - severity="P1"
+      receiver: 'pager'
+    - matchers:
+        - severity=~"P2|P3"
+      receiver: 'chat'
+
+receivers:
+  - name: 'chat'
+    webhook_configs:
+      - url: 'http://pager:8080/hook/chat'
+  - name: 'pager'
+    webhook_configs:
+      - url: 'http://pager:8080/hook/pager'
+
+inhibit_rules:
+  - source_matchers:
+      - severity="P1"
+    target_matchers:
+      - severity=~"P2|P3"
+    equal:
+      - alertname
+      - service

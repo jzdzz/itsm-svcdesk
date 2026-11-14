@@ -1,0 +1,40 @@
+# ai-generated: 100% - Gemini, reviewed by jzdzz
+routes:
+  - labels:
+      alertname: ShopCheckoutErrors
+      severity: P1
+      service: oteldemo.CheckoutService
+    receivers:
+      - pager
+  - labels:
+      alertname: ShopCheckoutWarning
+      severity: P2
+      service: oteldemo.CheckoutService
+    receivers:
+      - chat
+  - labels:
+      alertname: MinorIssue
+      severity: P3
+      service: oteldemo.CheckoutService
+    receivers:
+      - chat
+
+inhibitions:
+  - source:
+      alertname: ShopCheckoutErrors
+      severity: P1
+      service: oteldemo.CheckoutService
+    target:
+      alertname: ShopCheckoutErrors
+      severity: P2
+      service: oteldemo.CheckoutService
+    inhibited: true
+  - source:
+      alertname: ShopCheckoutErrors
+      severity: P1
+      service: oteldemo.CheckoutService
+    target:
+      alertname: ShopCheckoutErrors
+      severity: P2
+      service: other.Service
+    inhibited: false

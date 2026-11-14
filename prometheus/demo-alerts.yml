@@ -1,0 +1,22 @@
+# ai-generated: 100% - Gemini
+groups:
+  - name: itsm-lab-4
+    rules:
+      - alert: ShopCheckoutErrors
+        expr: sum(rate(rpc_server_duration_milliseconds_count{rpc_service="oteldemo.CheckoutService", rpc_grpc_status_code!="0"}[1m])) > 0
+        for: 1m
+        labels:
+          severity: P1
+          service: oteldemo.CheckoutService
+        annotations:
+          summary: "Shop checkout errors are high"
+          description: "High rate of checkout failures detected."
+      - alert: ShopCheckoutWarning
+        expr: sum(rate(rpc_server_duration_milliseconds_count{rpc_service="oteldemo.CheckoutService", rpc_grpc_status_code!="0"}[1m])) > 0
+        for: 1m
+        labels:
+          severity: P2
+          service: oteldemo.CheckoutService
+        annotations:
+          summary: "Shop checkout errors warning"
+          description: "Elevated rate of checkout failures."

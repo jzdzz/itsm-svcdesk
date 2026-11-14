@@ -1,0 +1,9 @@
+{
+  "results": [
+    {
+      "kind": "Pod",
+      "name": "checkoutservice-xyz",
+      "error": [{"text": "CrashLoopBackOff"}]
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+# Comparison: k8sgpt vs Agentic Loop
+
+When comparing the output and analytical approach of k8sgpt against the agentic loop investigation (using qwen3:4b-instruct and llama3), several key differences in methodology and depth of analysis become apparent. 
+
+The agentic loop approach leverages complex PromQL queries to dive deep into metrics, identifying specific service failures such as those in the `oteldemo.ProductCatalogService` and `oteldemo.CheckoutService`. It constructs hypotheses based on historical data and real-time metric spikes, offering a nuanced view of cascading failures within the microservices architecture. 
+
+In contrast, k8sgpt primarily focuses on the Kubernetes control plane and pod status. It quickly identifies issues like `CrashLoopBackOff` or pending pods, which is excellent for immediate infrastructure-level triage. However, it often lacks the application-level context provided by PromQL. While k8sgpt is faster at identifying pod-level state issues, the agentic loop provides a much richer, metric-driven root cause analysis that traces the failure through the application stack. Combining both tools provides the most comprehensive diagnostic coverage for complex incidents.
