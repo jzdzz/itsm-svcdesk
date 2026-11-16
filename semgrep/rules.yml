@@ -1,0 +1,20 @@
+# ai-generated: 100% - Gemini authored two Semgrep rules matching src/dora.py with test annotations
+rules:
+  - id: rfc3339-z-suffix-normalization
+    message: Detected manual RFC 3339 UTC Z-suffix replacement before fromisoformat parsing.
+    severity: INFO
+    languages:
+      - python
+    pattern: |
+      if $DT.endswith("Z"):
+          $DT = $DT[:-1] + "+00:00"
+
+  - id: event-id-set-deduplication
+    message: Detected manual event_id deduplication guard before appending event to list.
+    severity: WARNING
+    languages:
+      - python
+    pattern: |
+      if $EID not in $SEEN:
+          $SEEN.add($EID)
+          $EVENTS.append($EV)
